@@ -20,7 +20,7 @@ from supabase_db import (
 )
 
 app = Flask(__name__)
-app.secret_key = 'secret_key_for_flash_messages'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'secret_key_for_flash_messages')
 
 EXCEL_FILE = '2024-28_STUDENTS.xlsx'
 SETTINGS_FILE = 'settings.json'
