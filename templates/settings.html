@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mb-4">
+    <div class="page-kicker">Settings</div>
+    <h1 class="page-title">Workspace settings</h1>
+    <p class="page-subtitle">Institution details, access, notifications, and backup preferences.</p>
+</div>
+
+<div class="workspace-card overflow-hidden">
+    <div class="row g-0">
+        <div class="col-lg-3 border-end">
+            <div class="nav flex-column p-2" id="settingsTabs" role="tablist">
+                <button class="nav-link active border-0 text-start" id="institution-tab" data-bs-toggle="tab" data-bs-target="#institution-pane" type="button" role="tab">
+                    <i class="bi bi-building"></i> Institution
+                </button>
+                <button class="nav-link border-0 text-start" id="access-tab" data-bs-toggle="tab" data-bs-target="#access-pane" type="button" role="tab">
+                    <i class="bi bi-shield-lock"></i> Access
+                </button>
+                <button class="nav-link border-0 text-start" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications-pane" type="button" role="tab">
+                    <i class="bi bi-bell"></i> Notifications
+                </button>
+                <button class="nav-link border-0 text-start" id="backups-tab" data-bs-toggle="tab" data-bs-target="#backups-pane" type="button" role="tab">
+                    <i class="bi bi-cloud-arrow-up"></i> Backups
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="tab-content p-3 p-md-4">
+                <div class="tab-pane fade show active" id="institution-pane" role="tabpanel" aria-labelledby="institution-tab">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                        <div>
+                            <h5 class="mb-1">Institution profile</h5>
+                            <div class="text-muted small">These details appear on generated receipts.</div>
+                        </div>
+                        <span class="pill"><i class="bi bi-database-check"></i> Supabase DB</span>
+                    </div>
+
+                    <form action="/settings" method="POST">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Institution name</label>
+                                <input type="text" name="institution_name" class="form-control" value="{{ settings['institution_name'] }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Contact email</label>
+                                <input type="email" name="contact_email" class="form-control" value="{{ settings['contact_email'] }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Contact phone</label>
+                                <input type="text" name="contact_phone" class="form-control" value="{{ settings['contact_phone'] }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Address</label>
+                                <textarea name="address" class="form-control" rows="4" required>{{ settings['address'] }}</textarea>
+                            </div>
+                        </div>
+                        <div class="border-top mt-4 pt-4 d-flex justify-content-end gap-2">
+                            <button type="reset" class="btn btn-light">Cancel</button>
+                            <button type="submit" class="btn btn-kodefort">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="access-pane" role="tabpanel" aria-labelledby="access-tab">
+                    <h5 class="mb-1">Security and access</h5>
+                    <p class="text-muted small mb-4">Control admin access and verification preferences.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="workspace-card p-3 h-100">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="twoFactor" checked>
+                                    <label class="form-check-label fw-bold" for="twoFactor">Require admin verification</label>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2">Adds one more confirmation before sensitive actions.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Session timeout</label>
+                            <select class="form-select">
+                                <option>30 minutes</option>
+                                <option>1 hour</option>
+                                <option>End of day</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="notifications-pane" role="tabpanel" aria-labelledby="notifications-tab">
+                    <h5 class="mb-1">Notifications</h5>
+                    <p class="text-muted small mb-4">Choose which workspace events should be surfaced.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="workspace-card p-3 h-100">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="paymentAlerts" checked>
+                                    <label class="form-check-label fw-bold" for="paymentAlerts">Payment alerts</label>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2">Show alerts when a payment receipt is generated.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="workspace-card p-3 h-100">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="pendingAlerts">
+                                    <label class="form-check-label fw-bold" for="pendingAlerts">Pending reminders</label>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2">Track students without a recorded payment.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="backups-pane" role="tabpanel" aria-labelledby="backups-tab">
+                    <h5 class="mb-1">Data and backups</h5>
+                    <p class="text-muted small mb-4">Download the original Excel source file when needed.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Backup schedule</label>
+                            <select class="form-select" name="backup_schedule" form="backupSettingsForm">
+                                <option {% if settings['backup_schedule'] == 'Daily' %}selected{% endif %}>Daily</option>
+                                <option {% if settings['backup_schedule'] == 'Weekly' %}selected{% endif %}>Weekly</option>
+                                <option {% if settings['backup_schedule'] == 'Manual only' %}selected{% endif %}>Manual only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Source workbook</label>
+                            <input type="text" class="form-control" value="{{ excel_file }}" readonly>
+                        </div>
+                    </div>
+                    <form action="/settings" method="POST" id="backupSettingsForm" class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                        <input type="hidden" name="institution_name" value="{{ settings['institution_name'] }}">
+                        <input type="hidden" name="contact_email" value="{{ settings['contact_email'] }}">
+                        <input type="hidden" name="contact_phone" value="{{ settings['contact_phone'] }}">
+                        <input type="hidden" name="address" value="{{ settings['address'] }}">
+                        <button type="submit" class="btn btn-kodefort"><i class="bi bi-check2 me-2"></i>Save backup setting</button>
+                        <a href="/download_backup" class="btn btn-light"><i class="bi bi-download me-2"></i>Download backup</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

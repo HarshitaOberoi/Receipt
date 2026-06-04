@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <div class="page-kicker">Reports</div>
+        <h1 class="page-title">Financial reports</h1>
+        <p class="page-subtitle">Collection summaries grouped by category and degree.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('export_reports_pdf') }}" class="btn btn-light"><i class="bi bi-download me-2"></i>PDF</a>
+        <a href="{{ url_for('export_reports_excel') }}" class="btn btn-kodefort"><i class="bi bi-file-earmark-excel me-2"></i>Excel</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="workspace-card overflow-hidden h-100">
+            <div class="card-header px-3 py-3">
+                <h5 class="mb-1">By category</h5>
+                <div class="text-muted small">Admission categories and payment split</div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="text-end">Online</th>
+                            <th class="text-end">Offline</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in category_summary %}
+                        <tr>
+                            <td class="fw-bold">{{ item['Category'] }}</td>
+                            <td class="text-end text-muted">Rs. {{ "{:,.0f}".format(item['ONLINE AMOUNT']) }}</td>
+                            <td class="text-end text-muted">Rs. {{ "{:,.0f}".format(item['OFFLINE AMOUNT']) }}</td>
+                            <td class="text-end fw-bold soft-accent">Rs. {{ "{:,.0f}".format(item['Total']) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="workspace-card overflow-hidden h-100">
+            <div class="card-header px-3 py-3">
+                <h5 class="mb-1">By degree</h5>
+                <div class="text-muted small">Program-wise collection summary</div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Degree</th>
+                            <th class="text-end">Online</th>
+                            <th class="text-end">Offline</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in degree_summary %}
+                        <tr>
+                            <td class="fw-bold">{{ item['Degree'] }}</td>
+                            <td class="text-end text-muted">Rs. {{ "{:,.0f}".format(item['ONLINE AMOUNT']) }}</td>
+                            <td class="text-end text-muted">Rs. {{ "{:,.0f}".format(item['OFFLINE AMOUNT']) }}</td>
+                            <td class="text-end fw-bold soft-accent">Rs. {{ "{:,.0f}".format(item['Total']) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "layout.html" %}
+{% block content %}
+{% set paid_amount = student['ONLINE AMOUNT']|float + student['OFFLINE AMOUNT']|float %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+    <div>
+        <div class="page-kicker">Student profile</div>
+        <h1 class="page-title">{{ student['Student Name'] }}</h1>
+        <p class="page-subtitle">Registration {{ student['Registration No.'] }} · {{ student['Degree'] }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="/search_page" class="btn btn-light"><i class="bi bi-arrow-left me-2"></i>Directory</a>
+        <button class="btn btn-light" type="button"><i class="bi bi-printer me-2"></i>Print</button>
+        <button class="btn btn-kodefort" type="button"><i class="bi bi-pencil-square me-2"></i>Edit</button>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="workspace-card p-3 mb-3">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="avatar" style="width: 54px; height: 54px; font-size: 20px;">{{ student['Student Name'][:1] }}</div>
+                <div>
+                    <h5 class="mb-1">{{ student['Student Name'] }}</h5>
+                    <div class="text-muted small">S/o {{ student["Father's Name"] }}</div>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="pill">{{ student['Degree'] }}</span>
+                <span class="pill">{{ student['Category'] }}</span>
+                <span class="pill {% if student['EWS Status'] == 'YES' %}pill-success{% else %}pill-danger{% endif %}">
+                    EWS {{ student['EWS Status'] }}
+                </span>
+            </div>
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <span class="text-muted">Mother</span>
+                    <span class="fw-semibold text-end">{{ student["Mother's Name"] }}</span>
+                </div>
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <span class="text-muted">DOB</span>
+                    <span class="fw-semibold text-end">{{ student['Date Of Birth'] }}</span>
+                </div>
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <span class="text-muted">Aadhar</span>
+                    <span class="fw-semibold text-end">{{ student['Aadhar No.'] }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace-card stat-card">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="pill pill-success"><i class="bi bi-wallet2"></i> Paid</span>
+                <div class="stat-icon"><i class="bi bi-currency-rupee"></i></div>
+            </div>
+            <div class="metric-value">Rs. {{ "{:,.0f}".format(paid_amount) }}</div>
+            <div class="metric-note mt-2">{{ student['MODE OF PAYMENT'] if student['MODE OF PAYMENT'] else 'No payment mode recorded' }}</div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="workspace-card overflow-hidden">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs px-3 pt-2 border-0" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payment-tab" type="button">New payment</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#academic-tab" type="button">Academic</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="p-3 p-md-4">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="payment-tab">
+                        <form action="/pay" method="POST" id="paymentForm">
+                            <input type="hidden" name="reg_no" value="{{ student['Registration No.'] }}">
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Payment mode</label>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="mode" id="modeCash" value="CASH" checked>
+                                            <label class="btn btn-light w-100 py-3" for="modeCash"><i class="bi bi-cash d-block mb-1"></i>Cash</label>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="mode" id="modeOnline" value="ONLINE">
+                                            <label class="btn btn-light w-100 py-3" for="modeOnline"><i class="bi bi-globe d-block mb-1"></i>Online</label>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="radio" class="btn-check" name="mode" id="modeCheque" value="CHEQUE">
+                                            <label class="btn btn-light w-100 py-3" for="modeCheque"><i class="bi bi-bank d-block mb-1"></i>Cheque</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Amount</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">Rs.</span>
+                                        <input type="number" name="amount" class="form-control fw-bold" placeholder="0.00" min="0" step="0.01" required>
+                                    </div>
+                                    <div class="text-muted small mt-2">Verify the amount before saving the receipt.</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold">Fee type</label>
+                                    <select class="form-select form-select-lg" name="type" required>
+                                        <option value="Admission Fee">Admission Fee</option>
+                                        <option value="Semester Fee">Semester Fee</option>
+                                        <option value="Examination Fee">Examination Fee</option>
+                                        <option value="Library Fee">Library Fee</option>
+                                        <option value="Hostel Fee">Hostel Fee</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold">EWS verification</label>
+                                    <div class="workspace-card p-3">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" name="ews_status" value="YES" id="ewsSwitch" {% if student['EWS Status'] == 'YES' %}checked{% endif %}>
+                                            <label class="form-check-label fw-semibold" for="ewsSwitch">Student belongs to EWS</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="workspace-card p-3 mb-3">
+                                <div class="d-flex gap-3">
+                                    <div class="stat-icon"><i class="bi bi-info-circle"></i></div>
+                                    <p class="mb-0 text-muted">Saving this transaction updates Supabase and generates a printable receipt immediately.</p>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-kodefort btn-lg w-100">
+                                <i class="bi bi-shield-check me-2"></i>Confirm payment
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="academic-tab">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="workspace-card p-3">
+                                    <div class="text-muted small">Degree</div>
+                                    <div class="fw-bold">{{ student['Degree'] }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="workspace-card p-3">
+                                    <div class="text-muted small">Category</div>
+                                    <div class="fw-bold">{{ student['Category'] }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link {
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        color: var(--muted);
+        padding: 12px 10px;
+    }
+    .nav-tabs .nav-link.active {
+        border-bottom-color: var(--ink);
+        background: transparent;
+        color: var(--ink);
+    }
+    .btn-check:checked + .btn-light {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--panel);
+    }
+</style>
+
+<script>
+    const ewsSwitch = document.getElementById('ewsSwitch');
+    ewsSwitch.addEventListener('change', function() {
+        this.value = this.checked ? 'YES' : 'NO';
+    });
+</script>
+{% endblock %}

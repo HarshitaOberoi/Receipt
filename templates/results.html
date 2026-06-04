@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <div class="page-kicker">Search</div>
+        <h1 class="page-title">Student results</h1>
+        <p class="page-subtitle">{{ students|length }} matching records found.</p>
+    </div>
+    <a href="/search_page" class="btn btn-light"><i class="bi bi-arrow-left me-2"></i>New search</a>
+</div>
+
+<div class="workspace-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Registration</th>
+                    <th>Course</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if students %}
+                    {% for student in students %}
+                    {% set has_paid = (student['ONLINE AMOUNT']|float > 0 or student['OFFLINE AMOUNT']|float > 0) %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar">{{ student['Student Name'][:2].upper() }}</div>
+                                <div>
+                                    <div class="fw-bold">{{ student['Student Name'] }}</div>
+                                    <div class="text-muted small">S/o {{ student["Father's Name"] }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-semibold">{{ student['Registration No.'] }}</td>
+                        <td>
+                            <div>{{ student['Degree'] }}</div>
+                            <div class="text-muted small">{{ student['Category'] }}</div>
+                        </td>
+                        <td>
+                            <span class="pill {% if has_paid %}pill-success{% else %}pill-warning{% endif %}">
+                                <i class="bi {% if has_paid %}bi-check2-circle{% else %}bi-hourglass-split{% endif %}"></i>
+                                {{ 'Paid' if has_paid else 'Pending' }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="/details/{{ student['Registration No.'] }}" class="btn btn-kodefort btn-sm">
+                                Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="stat-icon mb-3"><i class="bi bi-search"></i></div>
+                                <h5>No student found</h5>
+                                <p class="mb-3">Try another spelling, father's name, or registration number.</p>
+                                <a href="/search_page" class="btn btn-kodefort">Back to search</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
