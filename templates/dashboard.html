@@ -4,7 +4,7 @@
     <div>
         <div class="page-kicker">Overview</div>
         <h1 class="page-title">Student fee dashboard</h1>
-        <p class="page-subtitle">A compact workspace for collections, pending records, and recent payments.</p>
+        <p class="page-subtitle">A compact workspace for managing students, pending records, and recent payments.</p>
     </div>
     <a href="/search_page" class="btn btn-kodefort"><i class="bi bi-plus-lg me-2"></i>Record payment</a>
 </div>
@@ -23,11 +23,11 @@
     <div class="col-md-6 col-xl-3">
         <div class="workspace-card stat-card h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
-                <span class="pill pill-success"><i class="bi bi-check2-circle"></i> Collected</span>
-                <div class="stat-icon"><i class="bi bi-currency-rupee"></i></div>
+                <span class="pill pill-success"><i class="bi bi-check2-circle"></i> Paid students</span>
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             </div>
-            <div class="metric-value">Rs. {{ "{:,.0f}".format(total_collected) }}</div>
-            <div class="metric-note mt-2">Online and offline combined</div>
+            <div class="metric-value">{{ total_students - pending_students }}</div>
+            <div class="metric-note mt-2">Students with recorded payments</div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
@@ -53,80 +53,44 @@
 </div>
 
 <div class="row g-3">
-    <div class="col-lg-8">
+    <div class="col-lg-12">
         <div class="workspace-card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center px-3 py-3">
+            <div class="card-header px-3 py-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-1">Collection trend</h5>
-                    <div class="text-muted small">Monthly sample view</div>
+                    <h5 class="mb-1">Recent transactions</h5>
+                    <div class="text-muted small">Latest students with payment entries</div>
                 </div>
-                <span class="pill"><i class="bi bi-calendar3"></i> Current session</span>
-            </div>
-            <div class="p-3" style="height: 320px;">
-                <canvas id="collectionChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        <div class="workspace-card h-100">
-            <div class="card-header px-3 py-3">
-                <h5 class="mb-1">Recent transactions</h5>
-                <div class="text-muted small">Latest students with payment entries</div>
+                <a href="/reports" class="btn btn-light btn-sm"><i class="bi bi-arrow-right me-2"></i>Open reports</a>
             </div>
             <div class="p-3">
+                <div class="row g-3">
                 {% if recent_transactions %}
                     {% for tx in recent_transactions %}
-                    <a class="d-flex align-items-center gap-3 py-2 border-bottom" href="/details/{{ tx['Registration No.'] }}">
-                        <div class="avatar">{{ tx['Student Name'][:2].upper() }}</div>
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="fw-bold text-truncate">{{ tx['Student Name'] }}</div>
-                            <div class="text-muted small text-truncate">{{ tx['TYPE'] }} · {{ tx['MODE OF PAYMENT'] }}</div>
-                        </div>
-                        <div class="fw-bold text-nowrap soft-accent">Rs. {{ "{:,.0f}".format(tx['ONLINE AMOUNT'] if tx['ONLINE AMOUNT'] > 0 else tx['OFFLINE AMOUNT']) }}</div>
-                    </a>
+                    <div class="col-md-6 col-lg-4">
+                        <a class="d-flex align-items-center gap-3 py-3 px-3 workspace-card h-100" href="/details/{{ tx['Registration No.'] }}">
+                            <div class="avatar">{{ tx['Student Name'][:2].upper() }}</div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-bold text-truncate">{{ tx['Student Name'] }}</div>
+                                <div class="text-muted small text-truncate">{{ tx['TYPE'].replace('|', ', ') if tx['TYPE'] else '' }} · {{ tx['MODE OF PAYMENT'].replace('|', ', ') if tx['MODE OF PAYMENT'] else '' }}</div>
+                                <div class="text-muted x-small mt-1">{{ tx['Registration No.'] }}</div>
+                            </div>
+                        </a>
+                    </div>
                     {% endfor %}
                 {% else %}
-                    <div class="empty-state">
-                        <div class="stat-icon mb-3"><i class="bi bi-receipt"></i></div>
+                    <div class="col-12 text-center py-5">
+                        <div class="stat-icon mx-auto mb-3"><i class="bi bi-receipt"></i></div>
                         <div>No recent transactions</div>
                     </div>
                 {% endif %}
-                <a href="/reports" class="btn btn-light w-100 mt-3"><i class="bi bi-arrow-right me-2"></i>Open reports</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    const ctx = document.getElementById('collectionChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'Monthly Collection',
-                data: [12000, 19000, 15000, 25000, 22000, 30000],
-                borderColor: '#2f5d50',
-                backgroundColor: 'rgba(47, 93, 80, 0.08)',
-                fill: true,
-                tension: 0.35,
-                borderWidth: 2,
-                pointRadius: 3,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#2f5d50',
-                pointBorderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#e7e2dc' }, ticks: { color: '#6f6a64' } },
-                x: { grid: { display: false }, ticks: { color: '#6f6a64' } }
-            }
-        }
-    });
-</script>
+<style>
+    .x-small { font-size: 11px; }
+</style>
+
 {% endblock %}

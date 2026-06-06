@@ -2,17 +2,18 @@
 {% block content %}
 <div class="no-print d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
     <div>
-        <div class="page-kicker">Receipt</div>
-        <h1 class="page-title">Payment receipt</h1>
-        <p class="page-subtitle">Receipt generated for {{ student['Student Name'] }}.</p>
+        <div class="page-kicker">Payment History</div>
+        <h1 class="page-title">All Receipts</h1>
+        <p class="page-subtitle">Historical records for {{ student['Student Name'] }}.</p>
     </div>
     <div class="d-flex gap-2">
-        <button onclick="window.print()" class="btn btn-kodefort" type="button"><i class="bi bi-printer me-2"></i>Print receipt</button>
-        <a href="/dashboard" class="btn btn-light"><i class="bi bi-house me-2"></i>Dashboard</a>
+        <button onclick="window.print()" class="btn btn-kodefort" type="button"><i class="bi bi-printer me-2"></i>Print All</button>
+        <a href="/details/{{ student['Registration No.'] }}" class="btn btn-light"><i class="bi bi-arrow-left me-2"></i>Back to Profile</a>
     </div>
 </div>
 
-<section class="receipt-sheet mx-auto" id="printable-receipt">
+{% for payment in payments %}
+<section class="receipt-sheet mx-auto mb-5" id="receipt-{{ loop.index }}">
     <div class="receipt-top-rule"></div>
 
     <header class="receipt-header">
@@ -123,7 +124,7 @@
 
     <div class="receipt-amount-words">
         <span>Amount in words</span>
-        <strong id="amt-words-receipt"></strong>
+        <strong class="amt-words-history" data-amount="{{ payment['amount'] }}"></strong>
     </div>
 
     <div class="receipt-lower">
@@ -144,6 +145,10 @@
         This is a computer generated receipt. Please keep it for your records.
     </footer>
 </section>
+{% if not loop.last %}
+<div class="page-break"></div>
+{% endif %}
+{% endfor %}
 
 <style>
     .receipt-sheet {
@@ -291,17 +296,6 @@
     .receipt-box dt { color: #000; font-weight: 600; }
     .receipt-box dd { margin: 0; font-weight: 800; color: #000; }
 
-    .receipt-status {
-        display: inline-block;
-        padding: 3px 9px;
-        border-radius: 999px;
-        background: #eee;
-        color: #000;
-        font-size: 11px;
-        font-weight: 800;
-        border: 1px solid #000;
-    }
-
     .receipt-table {
         width: calc(100% - 60px);
         margin: 0 30px 20px;
@@ -410,137 +404,38 @@
     }
 
     @media (max-width: 700px) {
-        .receipt-header,
-        .receipt-title-row,
-        .receipt-info-grid,
-        .receipt-lower {
-            flex-direction: column;
-        }
-
-        .receipt-meta {
-            grid-template-columns: 1fr;
-            text-align: left;
-        }
-
-        .receipt-box dl div {
-            grid-template-columns: 1fr;
-            gap: 2px;
-        }
-
-        .receipt-table {
-            width: calc(100% - 32px);
-            margin-right: 16px;
-            margin-left: 16px;
-        }
-
-        .receipt-header,
-        .receipt-title-row,
-        .receipt-info-grid,
-        .receipt-lower,
-        .receipt-footer {
-            padding-right: 16px;
-            padding-left: 16px;
-        }
-
-        .receipt-amount-words {
-            margin-right: 16px;
-            margin-left: 16px;
-        }
+        .receipt-header, .receipt-title-row, .receipt-info-grid, .receipt-lower { flex-direction: column; }
+        .receipt-meta { grid-template-columns: 1fr; text-align: left; }
+        .receipt-box dl div { grid-template-columns: 1fr; gap: 2px; }
+        .receipt-table { width: calc(100% - 32px); margin: 0 16px 20px; }
+        .receipt-header, .receipt-title-row, .receipt-info-grid, .receipt-lower, .receipt-footer { padding: 15px 16px; }
+        .receipt-amount-words { margin: 0 16px 20px; }
     }
 
     @media print {
-        @page {
-            size: A4;
-            margin: 5mm;
-        }
-        body { 
-            background: white !important; 
-            margin: 0; 
-            padding: 0; 
-            font-size: 9pt; /* Clear font size for print */
-            color: black !important;
-            -webkit-print-color-adjust: exact;
-        }
+        @page { size: A4; margin: 5mm; }
+        body { background: white !important; margin: 0; padding: 0; font-size: 9pt; color: black !important; -webkit-print-color-adjust: exact; }
         .no-print { display: none !important; }
-        .receipt-sheet {
-            width: 100% !important;
-            max-width: none !important;
-            border: 2px solid #000 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            page-break-inside: avoid;
-            background: white !important;
-        }
+        .receipt-sheet { width: 100% !important; max-width: none !important; border: 2px solid #000 !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 0 20px 0 !important; padding: 0 !important; page-break-inside: avoid; background: white !important; }
         .receipt-top-rule { height: 6px !important; background: black !important; }
-        .receipt-header { 
-            padding: 10px 20px 5px !important; 
-            border-bottom: 2px solid #000 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-        }
-        .receipt-brand { gap: 10px !important; }
-        .receipt-logo { width: 35px !important; height: 35px !important; font-size: 16pt !important; border: 1.5px solid #000 !important; }
+        .receipt-header { padding: 10px 20px 5px !important; border-bottom: 2px solid #000 !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
         .receipt-brand h2 { font-size: 20pt !important; color: black !important; }
-        .receipt-brand p { font-size: 9pt !important; margin: 0 !important; color: black !important; }
+        .receipt-brand p { font-size: 9pt !important; color: black !important; }
         .receipt-stamp { width: 55px !important; height: 55px !important; font-size: 12pt !important; border: 2px solid #000 !important; color: black !important; }
-        
-        .receipt-title-row { 
-            padding: 8px 20px !important; 
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: flex-end !important;
-        }
+        .receipt-title-row { padding: 8px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; }
         .receipt-title-row h3 { font-size: 16pt !important; color: black !important; }
-        .receipt-label { font-size: 9pt !important; color: black !important; }
-        .receipt-meta { gap: 5px !important; display: flex !important; flex-direction: row !important; }
-        .receipt-meta div { padding: 4px 8px !important; border: 1.5px solid #000 !important; min-width: 100px !important; text-align: left !important; }
-        
-        .receipt-info-grid { 
-            padding: 0 20px 5px !important; 
-            gap: 10px !important; 
-            display: flex !important;
-            flex-direction: row !important;
-        }
+        .receipt-meta div { padding: 4px 8px !important; border: 1.5px solid #000 !important; min-width: 100px !important; }
+        .receipt-info-grid { padding: 0 20px 5px !important; display: flex !important; flex-direction: row !important; }
         .receipt-box { padding: 6px !important; border: 1.5px solid #000 !important; flex: 1 !important; }
         .receipt-box-title { margin-bottom: 3px !important; font-size: 10pt !important; color: black !important; border-bottom: 1px solid #000 !important; }
         .receipt-box dl div { padding: 2px 0 !important; grid-template-columns: 100px 1fr !important; border-top: 1px dashed #000 !important; }
-        .receipt-box dt, .receipt-box dd { color: black !important; }
-        
         .receipt-table { margin: 0 20px 10px !important; width: calc(100% - 40px) !important; border: 2px solid #000 !important; }
-        .receipt-table th { padding: 6px 10px !important; border: 1px solid #000 !important; background-color: #eee !important; color: black !important; }
-        .receipt-table td { padding: 8px 10px !important; border: 1px solid #000 !important; color: black !important; }
-        .receipt-table td span { font-size: 8pt !important; color: black !important; }
-        .receipt-table tfoot td { font-size: 14pt !important; padding: 10px !important; background-color: black !important; color: white !important; }
-        
-        .receipt-amount-words { margin: 0 20px 10px !important; padding: 8px !important; border: 1.5px solid #000 !important; }
-        .receipt-amount-words span { font-size: 9pt !important; color: black !important; }
-        .receipt-amount-words strong { font-size: 11pt !important; color: black !important; }
-        
-        .receipt-lower { 
-            padding: 0 20px 10px !important; 
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: flex-end !important;
-            gap: 20px !important;
-            page-break-inside: avoid !important;
-        }
-        .receipt-note { width: auto !important; padding: 8px !important; border: 1.5px solid #000 !important; flex: 0 1 auto !important; }
-        .receipt-qr { width: 50px !important; height: 50px !important; font-size: 32pt !important; margin-bottom: 4px !important; border: 1px solid #000 !important; color: black !important; }
-        .receipt-note p { font-size: 8pt !important; color: black !important; }
-        .receipt-note strong { font-size: 10pt !important; color: black !important; }
-        
-        .receipt-signature { width: 180px !important; flex: 0 0 auto !important; }
+        .receipt-table th { background-color: #eee !important; color: black !important; }
+        .receipt-table tfoot td { background-color: black !important; color: white !important; }
+        .receipt-amount-words { margin: 0 20px 10px !important; border: 1.5px solid #000 !important; }
+        .receipt-lower { padding: 0 20px 10px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; }
         .receipt-signature div { height: 40px !important; border-bottom: 2px solid #000 !important; }
-        .receipt-signature strong { font-size: 10pt !important; color: black !important; }
-        .receipt-signature span { font-size: 9pt !important; color: black !important; }
-        
-        .receipt-footer { display: block !important; border-top: 2px solid #000 !important; background-color: #eee !important; color: black !important; padding: 8px !important; }
+        .page-break { page-break-after: always; }
     }
 </style>
 
@@ -554,36 +449,23 @@
 
         function convertBelowThousand(n) {
             let text = '';
-            if (n > 99) {
-                text += digit[Math.floor(n / 100)] + ' hundred ';
-                n %= 100;
-            }
-            if (n > 19) {
-                text += tens[Math.floor(n / 10)] + ' ';
-                n %= 10;
-            }
+            if (n > 99) { text += digit[Math.floor(n / 100)] + ' hundred '; n %= 100; }
+            if (n > 19) { text += tens[Math.floor(n / 10)] + ' '; n %= 10; }
             if (n > 9) text += teen[n - 10] + ' ';
             else if (n > 0) text += digit[n] + ' ';
             return text;
         }
 
         let words = '';
-        if (number > 9999999) {
-            words += convertBelowThousand(Math.floor(number / 10000000)) + 'crore ';
-            number %= 10000000;
-        }
-        if (number > 99999) {
-            words += convertBelowThousand(Math.floor(number / 100000)) + 'lakh ';
-            number %= 100000;
-        }
-        if (number > 999) {
-            words += convertBelowThousand(Math.floor(number / 1000)) + 'thousand ';
-            number %= 1000;
-        }
+        if (number > 9999999) { words += convertBelowThousand(Math.floor(number / 10000000)) + 'crore '; number %= 10000000; }
+        if (number > 99999) { words += convertBelowThousand(Math.floor(number / 100000)) + 'lakh '; number %= 100000; }
+        if (number > 999) { words += convertBelowThousand(Math.floor(number / 1000)) + 'thousand '; number %= 1000; }
         words += convertBelowThousand(number);
         return words.trim().toUpperCase() + ' RUPEES ONLY';
     }
 
-    document.getElementById('amt-words-receipt').innerText = numberToWords({{ payment['amount']|float }});
+    document.querySelectorAll('.amt-words-history').forEach(el => {
+        el.innerText = numberToWords(parseFloat(el.dataset.amount));
+    });
 </script>
 {% endblock %}

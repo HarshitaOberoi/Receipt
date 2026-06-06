@@ -182,14 +182,33 @@ def search_students(query, limit=100):
     ) or []
 
 
-def update_payment(registration_no, mode, amount, fee_type, ews_status):
+def update_payment(registration_no, mode, amount, fee_type, ews_status, receipt_no, date):
     amount = clean_number(amount)
+    
+    # First, fetch existing data to append
+    existing = fetch_student(registration_no)
+    if not existing:
+        return None
+        
+    existing_types = clean_text(existing.get('fee_type')) or ""
+    existing_modes = clean_text(existing.get('mode_of_payment')) or ""
+    existing_history = clean_text(existing.get('username')) or ""
+    
+    # We store multiple values separated by "|"
+    new_types = f"{existing_types}|{fee_type}" if existing_types else fee_type
+    new_modes = f"{existing_modes}|{mode}" if existing_modes else mode
+    
+    # Store full history in 'username' column: amount|mode|date|receipt_no|type
+    new_record = f"{amount}|{mode}|{date}|{receipt_no}|{fee_type}"
+    new_history = f"{existing_history}||{new_record}" if existing_history else new_record
+    
     payload = {
-        'mode_of_payment': clean_text(mode),
-        'online_amount': amount if mode == 'ONLINE' else 0,
-        'offline_amount': amount if mode != 'ONLINE' else 0,
-        'fee_type': clean_text(fee_type),
+        'mode_of_payment': new_modes,
+        'online_amount': (existing.get('online_amount') or 0) + (amount if mode == 'ONLINE' else 0),
+        'offline_amount': (existing.get('offline_amount') or 0) + (amount if mode != 'ONLINE' else 0),
+        'fee_type': new_types,
         'ews_status': clean_text(ews_status) or 'NO',
+        'username': new_history,
         'updated_at': datetime.utcnow().isoformat()
     }
     registration_no = quote(str(registration_no), safe='')

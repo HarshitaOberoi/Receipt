@@ -161,10 +161,6 @@ def dashboard():
         students = []
 
     total_students = len(students)
-    online_total = sum(float(student['ONLINE AMOUNT'] or 0) for student in students)
-    offline_total = sum(float(student['OFFLINE AMOUNT'] or 0) for student in students)
-    total_collected = online_total + offline_total
-
     paid_students = [
         student for student in students
         if float(student['ONLINE AMOUNT'] or 0) > 0 or float(student['OFFLINE AMOUNT'] or 0) > 0
@@ -172,18 +168,10 @@ def dashboard():
     pending_students = total_students - len(paid_students)
     recent_transactions = list(reversed(paid_students[-5:]))
     
-    # Data for charts (e.g., Online vs Offline)
-    chart_data = {
-        'labels': ['Online', 'Offline'],
-        'values': [float(online_total), float(offline_total)]
-    }
-    
     return render_template('dashboard.html', 
                            total_students=total_students,
-                           total_collected=total_collected,
                            pending_students=pending_students,
-                           recent_transactions=recent_transactions,
-                           chart_data=chart_data)
+                           recent_transactions=recent_transactions)
 
 @app.route('/reports')
 def reports():
@@ -293,6 +281,27 @@ def details(reg_no):
 @app.route('/pay', methods=['POST'])
 def pay():
     reg_no = request.form.get('reg_no')
+    fee_type = request.form.get('type')
+    
+    # Security check: Ensure student hasn't already paid for THIS type
+    # and only allow Admission + ID Card and Examination Fee as per requirement
+    try:
+        student_record = fetch_student(reg_no)
+        if student_record:
+            paid_types = (student_record.get('fee_type') or "").split('|')
+            if fee_type in paid_types:
+                flash(f'Payment for {fee_type} already exists and is locked.', 'danger')
+                return redirect(url_for('details', reg_no=reg_no))
+            
+            # If they already paid both, lock everything
+            if 'Admission + ID Card' in paid_types and 'Examination Fee' in paid_types:
+                flash('All allowed payments (Admission and Examination) are completed and locked.', 'danger')
+                return redirect(url_for('details', reg_no=reg_no))
+                
+    except SupabaseError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('index'))
+
     mode = request.form.get('mode')
     amount = request.form.get('amount')
     fee_type = request.form.get('type')
@@ -303,8 +312,11 @@ def pay():
     except (ValueError, TypeError):
         amount_val = 0.0
 
+    receipt_no = f"REC-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
     try:
-        updated_student = update_payment(reg_no, mode, amount_val, fee_type, ews_status)
+        updated_student = update_payment(reg_no, mode, amount_val, fee_type, ews_status, receipt_no, date)
     except SupabaseError as exc:
         flash(str(exc), 'danger')
         student_record = fetch_student(reg_no)
@@ -317,14 +329,45 @@ def pay():
     
     student = student_to_template(updated_student)
     payment = {
-        'receipt_no': f"REC-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'receipt_no': receipt_no,
+        'date': date,
         'amount': amount,
         'mode': mode,
         'type': fee_type
     }
     
     return render_template('bill.html', student=student, payment=payment, settings=load_settings())
+
+@app.route('/print_history/<reg_no>')
+def print_history(reg_no):
+    try:
+        student_record = fetch_student(reg_no)
+    except SupabaseError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('index'))
+
+    if not student_record:
+        flash('Student not found!', 'danger')
+        return redirect(url_for('index'))
+    
+    student = student_to_template(student_record)
+    history_str = student_record.get('username') or ""
+    payments = []
+    
+    if history_str:
+        records = history_str.split('||')
+        for rec in records:
+            parts = rec.split('|')
+            if len(parts) >= 5:
+                payments.append({
+                    'amount': parts[0],
+                    'mode': parts[1],
+                    'date': parts[2],
+                    'receipt_no': parts[3],
+                    'type': parts[4]
+                })
+    
+    return render_template('history_print.html', student=student, payments=payments, settings=load_settings())
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

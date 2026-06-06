@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 {% set paid_amount = student['ONLINE AMOUNT']|float + student['OFFLINE AMOUNT']|float %}
+{% set paid_types = student['TYPE'].split('|') if student['TYPE'] else [] %}
+{% set admission_done = 'Admission + ID Card' in paid_types %}
+{% set examination_done = 'Examination Fee' in paid_types %}
+{% set all_done = admission_done and examination_done %}
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
     <div>
         <div class="page-kicker">Student profile</div>
@@ -9,7 +13,9 @@
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="/search_page" class="btn btn-light"><i class="bi bi-arrow-left me-2"></i>Directory</a>
-        <button class="btn btn-light" type="button"><i class="bi bi-printer me-2"></i>Print</button>
+        {% if paid_amount > 0 %}
+        <a href="/print_history/{{ student['Registration No.'] }}" class="btn btn-light"><i class="bi bi-printer me-2"></i>Print History</a>
+        {% endif %}
         <button class="btn btn-kodefort" type="button"><i class="bi bi-pencil-square me-2"></i>Edit</button>
     </div>
 </div>
@@ -53,7 +59,7 @@
                 <div class="stat-icon"><i class="bi bi-currency-rupee"></i></div>
             </div>
             <div class="metric-value">Rs. {{ "{:,.0f}".format(paid_amount) }}</div>
-            <div class="metric-note mt-2">{{ student['MODE OF PAYMENT'] if student['MODE OF PAYMENT'] else 'No payment mode recorded' }}</div>
+            <div class="metric-note mt-2">{{ student['MODE OF PAYMENT'].replace('|', ', ') if student['MODE OF PAYMENT'] else 'No payment recorded' }}</div>
         </div>
     </div>
 
@@ -72,6 +78,19 @@
             <div class="p-3 p-md-4">
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="payment-tab">
+                        {% if all_done %}
+                            <div class="workspace-card p-4 text-center">
+                                <div class="stat-icon mx-auto mb-3" style="width: 64px; height: 64px; font-size: 28px; background: #e2f0e8; color: #27634f;">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                </div>
+                                <h4 class="mb-2">Student Profile Locked</h4>
+                                <p class="text-muted mb-4">Both <strong>Admission + ID Card</strong> and <strong>Examination Fee</strong> receipts have been generated. This profile is now locked for further payments.</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="/print_history/{{ student['Registration No.'] }}" class="btn btn-light"><i class="bi bi-printer me-2"></i>Print History</a>
+                                    <a href="/search_page" class="btn btn-kodefort">Done</a>
+                                </div>
+                            </div>
+                        {% else %}
                         <form action="/pay" method="POST" id="paymentForm">
                             <input type="hidden" name="reg_no" value="{{ student['Registration No.'] }}">
 
@@ -107,13 +126,22 @@
                                 <div class="col-md-7">
                                     <label class="form-label fw-bold">Fee type</label>
                                     <select class="form-select form-select-lg" name="type" required>
-                                        <option value="Admission Fee">Admission Fee</option>
-                                        <option value="Semester Fee">Semester Fee</option>
+                                        {% if not admission_done %}
+                                        <option value="Admission + ID Card">Admission + ID Card</option>
+                                        {% endif %}
+                                        {% if not examination_done %}
                                         <option value="Examination Fee">Examination Fee</option>
-                                        <option value="Library Fee">Library Fee</option>
-                                        <option value="Hostel Fee">Hostel Fee</option>
-                                        <option value="Other">Other</option>
+                                        {% endif %}
                                     </select>
+                                    {% if admission_done or examination_done %}
+                                    <div class="mt-2">
+                                        <small class="text-success">Already paid: 
+                                            {% for t in paid_types %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle me-1">{{ t }}</span>
+                                            {% endfor %}
+                                        </small>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label fw-bold">EWS verification</label>
@@ -137,6 +165,7 @@
                                 <i class="bi bi-shield-check me-2"></i>Confirm payment
                             </button>
                         </form>
+                        {% endif %}
                     </div>
 
                     <div class="tab-pane fade" id="academic-tab">
